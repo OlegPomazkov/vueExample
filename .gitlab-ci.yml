@@ -1,0 +1,38 @@
+stages:
+- build
+- deploy
+- notify
+
+build_testing:
+  tags:
+   - testing
+  stage: build
+  script:
+    - docker build -t $CI_PROJECT_NAMESPACE-$CI_PROJECT_NAME:$CI_COMMIT_REF_SLUG .
+  environment:
+    name: testing
+    url: https://testing.adbery.com
+  only:
+    - testing
+
+deploy_testing:
+  tags:
+    - testing
+  stage: deploy
+  script:
+    - cd /docker/$CI_PROJECT_PATH
+    - docker-compose up -d
+    - ci-notify ✅
+  environment:
+    name: testing
+    url: https://testing.adbery.com
+  only:
+    - testing
+
+notify_error:
+  stage: notify
+  script:
+    - ci-notify ❌
+  when: on_failure
+  only:
+    - testing
